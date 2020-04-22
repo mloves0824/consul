@@ -110,6 +110,12 @@ func HookNormalizeHCLNestedBlocks(from, to reflect.Type, data interface{}) (inte
 		return data, nil
 	}
 
+	// If the target is interface{} then the config is opaque, and it should not
+	// be modified.
+	if to == typeOfEmptyInterface {
+		return data, nil
+	}
+
 	switch d := data.(type) {
 	case []map[string]interface{}:
 		switch {
