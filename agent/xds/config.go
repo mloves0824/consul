@@ -58,7 +58,22 @@ type ProxyConfig struct {
 // allows caller to choose whether and how to report the error.
 func ParseProxyConfig(m map[string]interface{}) (ProxyConfig, error) {
 	var cfg ProxyConfig
-	err := mapstructure.WeakDecode(m, &cfg)
+	decodeConf := &mapstructure.DecoderConfig{
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			decode.HookNormalizeHCLNestedBlocks,
+			decode.HookTranslateKeys,
+		),
+		Result:           &cfg,
+		WeaklyTypedInput: true,
+	}
+	decoder, err := mapstructure.NewDecoder(decodeConf)
+	if err != nil {
+		return cfg, err
+	}
+	if err := decoder.Decode(m); err != nil {
+		return cfg, err
+	}
+
 	// Set defaults (even if error is returned)
 	if cfg.Protocol == "" {
 		cfg.Protocol = "tcp"
@@ -202,7 +217,11 @@ func (p PassiveHealthCheck) AsOutlierDetection() *envoycluster.OutlierDetection 
 func ParseUpstreamConfigNoDefaults(m map[string]interface{}) (UpstreamConfig, error) {
 	var cfg UpstreamConfig
 	config := &mapstructure.DecoderConfig{
-		DecodeHook:       mapstructure.StringToTimeDurationHookFunc(),
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			decode.HookNormalizeHCLNestedBlocks,
+			decode.HookTranslateKeys,
+			mapstructure.StringToTimeDurationHookFunc(),
+		),
 		Result:           &cfg,
 		WeaklyTypedInput: true,
 	}
