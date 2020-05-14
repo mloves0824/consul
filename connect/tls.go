@@ -177,8 +177,7 @@ func extractCertURI(certs []*x509.Certificate) (*url.URL, error) {
 
 // verifyServerCertMatchesURI is used on tls connections dialed to a connect
 // server to ensure that the certificate it presented has the correct identity.
-func verifyServerCertMatchesURI(certs []*x509.Certificate,
-	expected connect.CertURI) error {
+func verifyServerCertMatchesURI(certs []*x509.Certificate, expected connect.CertURI) error {
 	expectedStr := expected.URI().String()
 
 	gotURI, err := extractCertURI(certs)
@@ -192,6 +191,9 @@ func verifyServerCertMatchesURI(certs []*x509.Certificate,
 	// domains.
 	expectURI := expected.URI()
 	expectURI.Host = gotURI.Host
+	// nolint: staticcheck // strings.EqualFold is the recommended way of doing
+	// this comparison, however it is more permissive, so keep the old comparison
+	// to preserve backwards compat.
 	if strings.ToLower(gotURI.String()) == strings.ToLower(expectURI.String()) {
 		// OK!
 		return nil
