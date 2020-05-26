@@ -6,7 +6,6 @@ export default Adapter.extend({
       console.log(index);
       return request`
         GET /v1/internal/ui/gateway-services-nodes/${gateway}?${{ dc }}
-  
         ${{
           ...this.formatNspace(ns),
           index,
